@@ -1,0 +1,22 @@
+
+# idea ignore
+.idea/
+*.ipr
+*.iml
+*.iws
+
+# temp ignore
+*.log.*
+*.log
+*.out
+*.cache
+*.diff
+*.patch
+*.tmp
+*.bak
+*.bkp
+*.swp
+~$*
+*.pyc
+*.class
+draft*
