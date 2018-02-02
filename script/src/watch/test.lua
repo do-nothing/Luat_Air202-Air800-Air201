@@ -11,7 +11,7 @@ require"misc"
 require"audio"
 
 PRODUCT_KEY = "0S9dtdoet7C"
-newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
+--newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
 newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
 
 local function print(...)
@@ -26,6 +26,7 @@ end
 
 local function subackcb(usertag,result)
     print("subackcb:",usertag,result)
+    audio.play(0,"FILE","/ldata/welcome_2.mp3",audiocore.VOL7)
 end
 
 local function rcvmessagecb(topic,payload,qos)
@@ -45,6 +46,7 @@ end
 local function connecterrcb(r)
     print("connecterrcb:",r)
 end
+audio.play(0,"FILE","/ldata/welcome_1.mp3",audiocore.VOL7)
 --5Ãëºó¿ªÊ¼ÉÕÐ´sn
 sys.timer_start(setsn,5000)
 aliyuniotssl.config(PRODUCT_KEY)
