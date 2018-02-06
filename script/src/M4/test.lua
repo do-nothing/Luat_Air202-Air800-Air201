@@ -9,6 +9,7 @@ module(...,package.seeall)
 require"aliyuniotssl"
 require"misc"
 require"audio"
+require"common"
 
 PRODUCT_KEY = "0S9dtdoet7C"
 newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
@@ -32,9 +33,25 @@ end
 
 local function procVolume(volume)
     print("volume-->", volume)
-    command = "7EFF06060000"..binstohexs(schar(volume)).."EF"
-    commandBins = hexstobins(command);
-    print(binstohexs(commandBins, " "))
+    local command = "7EFF06060000"..common.binstohexs(string.char(volume)).."EF"
+    local commandBins = common.hexstobins(command);
+    print(common.binstohexs(commandBins, " "))
+end
+
+local function procStop(flag)
+    print("stop flag-->", flag)
+    if flag==0 then
+
+    elseif flag==1 then
+        local command = "7EFF0615000000FEE6EF"
+        local commandBins = common.hexstobins(command);
+        print(common.binstohexs(commandBins, " "))
+    elseif flag==2 then
+        local command = "7EFF0616000000FEE5EF"
+        local commandBins = common.hexstobins(command);
+        print(common.binstohexs(commandBins, " "))
+    end
+
 end
 
 local function rcvmessagecb(topic,payload,qos)
@@ -44,7 +61,7 @@ local function rcvmessagecb(topic,payload,qos)
     local tjsondata,result,errinfo = json.decode(payload)
     if result then
         procVolume(tjsondata["volume"])
-        print("stop-->", tjsondata["stop"])
+        procStop(tjsondata["stop"])
         print("insert-->", tjsondata["insert"])
         print("play-->", json.encode(tjsondata["play"]))
         for key, value in ipairs(tjsondata["play"]) do
@@ -53,7 +70,6 @@ local function rcvmessagecb(topic,payload,qos)
     else
         print("json.decode error",errinfo)
     end
-    string.len()
 end
 
 local function connectedcb()
