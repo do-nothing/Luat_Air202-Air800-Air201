@@ -14,6 +14,9 @@ require"common"
 PRODUCT_KEY = "0S9dtdoet7C"
 newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
 --newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
+local rdbuf = ""
+
+local voiceList = {}
 
 local function print(...)
     _G.print("guide info -->",...)
@@ -25,28 +28,71 @@ local function setsn()
     end
 end
 
+local function parse(data)
+    if not data then return end
+
+    local tail = string.find(data,string.char(0xEF))
+    if not tail then return false,data end
+
+    print("parse",common.binstohexs(data, " "))
+
+    return true,string.sub(data,tail+1,-1)
+end
+
+local function proc(data)
+    if not data or string.len(data) == 0 then return end
+    --追加到缓冲区
+    rdbuf = rdbuf..data
+
+    local result,unproc
+    unproc = rdbuf
+    --根据帧结构循环解析未处理过的数据
+    while true do
+        result,unproc = parse(unproc)
+        if not unproc or unproc == "" or not result then
+            break
+        end
+    end
+    rdbuf = unproc or ""
+end
+
+local function writeUart(s)
+    print("write-->",common.binstohexs(s, " "))
+    uart.write(1,s)
+end
+
+local function readUart()
+    local data = ""
+    while true do
+        data = uart.read(1,"*l",0)
+        if not data or string.len(data) == 0 then break end
+        proc(data)
+    end
+end
+
 local function subackcb(usertag,result)
     print("subackcb:",usertag,result)
     audio.play(0,"FILE","/ldata/welcome_2.mp3",audiocore.VOL7)
 end
 
-
 local function procVolume(volume)
     print("volume-->", volume)
     local command = "7EFF06060000"..common.binstohexs(string.char(volume)).."EF"
     local commandBins = common.hexstobins(command);
+    writeUart(commandBins)
     print(common.binstohexs(commandBins, " "))
 end
 
 local function procStop(flag)
     print("stop flag-->", flag)
     if flag==0 then
-
+        voiceList = {}
     elseif flag==1 then
         local command = "7EFF0615000000FEE6EF"
         local commandBins = common.hexstobins(command);
         print(common.binstohexs(commandBins, " "))
     elseif flag==2 then
+        voiceList = {}
         local command = "7EFF0616000000FEE5EF"
         local commandBins = common.hexstobins(command);
         print(common.binstohexs(commandBins, " "))
@@ -66,9 +112,14 @@ local function rcvmessagecb(topic,payload,qos)
         print("play-->", json.encode(tjsondata["play"]))
         for key, value in ipairs(tjsondata["play"]) do
             print(key, value, tjsondata["play"][key])
+            table.insert(voiceList,value);
         end
     else
         print("json.decode error",errinfo)
+    end
+
+    for key, value in ipairs(voiceList) do
+        print(key, value)
     end
 end
 
@@ -83,9 +134,10 @@ end
 local function connecterrcb(r)
     print("connecterrcb:",r)
 end
-audio.play(0,"FILE","/ldata/welcome_1.mp3",audiocore.VOL7)
 
---5秒后开始烧写sn
+audio.play(0,"FILE","/ldata/welcome_1.mp3",audiocore.VOL7)
 sys.timer_start(setsn,5000)
 aliyuniotssl.config(PRODUCT_KEY)
 aliyuniotssl.regcb(connectedcb,connecterrcb)
+sys.reguart(1,readUart)
+uart.setup(1,115200,8,uart.PAR_NONE,uart.STOP_1)

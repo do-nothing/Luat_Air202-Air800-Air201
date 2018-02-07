@@ -12,7 +12,9 @@ require"audio"
 
 PRODUCT_KEY = "0S9dtdoet7C"
 --newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
-newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
+--newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
+--newsn = "mCKWK8XUDOuUStxCMKYNqQnWhUPzwfGS"  --s5
+newsn = "omZB6M8yuMLKd170X4U3wbJgLu1obRyf" --s6
 
 local function print(...)
     _G.print("guide info -->",...)
