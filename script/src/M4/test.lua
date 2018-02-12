@@ -16,7 +16,7 @@ newsn = "Svp1Ak6I1Q1m29BB8leD821TXjbm71e9"  --air800
 --newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
 local rdbuf = ""
 local isPlay = false
-local voiceList = {"0201"}
+local voiceList = {"6301"}
 
 local function print(...)
     _G.print("guide info -->",...)
@@ -120,14 +120,6 @@ local function procInsert(target)
     end
 end
 
-local function playVoice()
-    if isPlay then return end
-    if not voiceList or table.getn(voiceList) == 0 then return end
-    print("play voice-->", voiceList[1])
-    local command = "7EFF060F01"..voiceList[1].."EF"
-    writeUart(1,command)
-end
-
 local function procPlay(voiceGroup)
     if not voiceGroup then return end
     print("play-->", json.encode(voiceGroup))
@@ -140,7 +132,7 @@ end
 
 local function subackcb(usertag,result)
     print("subackcb:",usertag,result)
-    procInsert("0202")
+    procInsert("6302")
     audio.play(0,"FILE","/ldata/welcome_2.mp3",audiocore.VOL7)
 end
 
