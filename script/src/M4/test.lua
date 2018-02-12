@@ -11,12 +11,12 @@ require"misc"
 require"audio"
 require"common"
 
-PRODUCT_KEY = "0S9dtdoet7C"
-newsn = "iYRmZ9fd2E0BnwiwxaP6oAxsUlETedls"  --air800
+PRODUCT_KEY = "r7gAvsuXY2Y"
+newsn = "Svp1Ak6I1Q1m29BB8leD821TXjbm71e9"  --air800
 --newsn = "UdSfAzmAGfZ10ALLgHunHOhmIx5kouTQ"  --watch
 local rdbuf = ""
-
-local voiceList = {}
+local isPlay = false
+local voiceList = {"0201"}
 
 local function print(...)
     _G.print("guide info -->",...)
@@ -28,13 +28,39 @@ local function setsn()
     end
 end
 
+local function writeUart(port, s)
+    local commandBins = common.hexstobins(s);
+    uart.write(port,commandBins)
+    print("write-->",common.binstohexs(commandBins, " "))
+end
+
+local function playVoice()
+    if isPlay then return end
+    if not voiceList or table.getn(voiceList) == 0 then return end
+    print("play voice-->", voiceList[1])
+    local command = "7EFF060F01"..voiceList[1].."EF"
+    writeUart(1,command)
+end
+
 local function parse(data)
     if not data then return end
 
     local tail = string.find(data,string.char(0xEF))
     if not tail then return false,data end
+    local cmdtyp = string.byte(data,4, 4)
+    local body,result = string.sub(data,1,tail)
+    print("parse",common.binstohexs(body, " "))
 
-    print("parse",common.binstohexs(data, " "))
+    if cmdtyp == 0x40 then
+        isPlay = false
+        playVoice()
+    elseif cmdtyp == 0x41 then
+        isPlay = true
+    elseif isPlay and cmdtyp == 0x3D then
+        isPlay = false
+        table.remove(voiceList, 1)
+        playVoice()
+    end
 
     return true,string.sub(data,tail+1,-1)
 end
@@ -56,11 +82,6 @@ local function proc(data)
     rdbuf = unproc or ""
 end
 
-local function writeUart(s)
-    print("write-->",common.binstohexs(s, " "))
-    uart.write(1,s)
-end
-
 local function readUart()
     local data = ""
     while true do
@@ -70,34 +91,57 @@ local function readUart()
     end
 end
 
-local function subackcb(usertag,result)
-    print("subackcb:",usertag,result)
-    audio.play(0,"FILE","/ldata/welcome_2.mp3",audiocore.VOL7)
-end
-
 local function procVolume(volume)
+    if not volume then return end
     print("volume-->", volume)
     local command = "7EFF06060000"..common.binstohexs(string.char(volume)).."EF"
-    local commandBins = common.hexstobins(command);
-    writeUart(commandBins)
-    print(common.binstohexs(commandBins, " "))
+    writeUart(1,command)
 end
 
 local function procStop(flag)
+    if not flag then return end
     print("stop flag-->", flag)
-    if flag==0 then
-        voiceList = {}
-    elseif flag==1 then
-        local command = "7EFF0615000000FEE6EF"
-        local commandBins = common.hexstobins(command);
-        print(common.binstohexs(commandBins, " "))
-    elseif flag==2 then
-        voiceList = {}
+    isPlay = false
+    voiceList = {}
+    if flag==1 then
         local command = "7EFF0616000000FEE5EF"
-        local commandBins = common.hexstobins(command);
-        print(common.binstohexs(commandBins, " "))
+        writeUart(1,command)
     end
+end
 
+local function procInsert(target)
+    if not target then return end
+    print("insert target-->", target, "isPlay-->", isPlay)
+    if isPlay then
+        table.insert(voiceList,2,target);
+    else
+        table.insert(voiceList,1,target);
+        playVoice()
+    end
+end
+
+local function playVoice()
+    if isPlay then return end
+    if not voiceList or table.getn(voiceList) == 0 then return end
+    print("play voice-->", voiceList[1])
+    local command = "7EFF060F01"..voiceList[1].."EF"
+    writeUart(1,command)
+end
+
+local function procPlay(voiceGroup)
+    if not voiceGroup then return end
+    print("play-->", json.encode(voiceGroup))
+    for key, value in ipairs(voiceGroup) do
+        print(key, value, voiceGroup[key])
+        table.insert(voiceList,value);
+    end
+    playVoice()
+end
+
+local function subackcb(usertag,result)
+    print("subackcb:",usertag,result)
+    procInsert("0202")
+    audio.play(0,"FILE","/ldata/welcome_2.mp3",audiocore.VOL7)
 end
 
 local function rcvmessagecb(topic,payload,qos)
@@ -108,18 +152,10 @@ local function rcvmessagecb(topic,payload,qos)
     if result then
         procVolume(tjsondata["volume"])
         procStop(tjsondata["stop"])
-        print("insert-->", tjsondata["insert"])
-        print("play-->", json.encode(tjsondata["play"]))
-        for key, value in ipairs(tjsondata["play"]) do
-            print(key, value, tjsondata["play"][key])
-            table.insert(voiceList,value);
-        end
+        procInsert(tjsondata["insert"])
+        procPlay(tjsondata["play"])
     else
-        print("json.decode error",errinfo)
-    end
-
-    for key, value in ipairs(voiceList) do
-        print(key, value)
+        print("json.decode error:",errinfo)
     end
 end
 
@@ -135,9 +171,11 @@ local function connecterrcb(r)
     print("connecterrcb:",r)
 end
 
+uart.setup(1,9600,8,uart.PAR_NONE,uart.STOP_1)
+sys.reguart(1,readUart)
+playVoice()
 audio.play(0,"FILE","/ldata/welcome_1.mp3",audiocore.VOL7)
+
 sys.timer_start(setsn,5000)
 aliyuniotssl.config(PRODUCT_KEY)
 aliyuniotssl.regcb(connectedcb,connecterrcb)
-sys.reguart(1,readUart)
-uart.setup(1,115200,8,uart.PAR_NONE,uart.STOP_1)
