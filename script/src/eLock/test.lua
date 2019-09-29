@@ -14,12 +14,13 @@ require"pins"
 PRODUCT_KEY = "IgW98z2NGr4"
 newsn = "AjJnJOPk4m23FLn8VW4gxvYRnbhmawlE"  --air800
 --newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY"  --watch
---newsn = "mCKWK8XUDOuUStxCMKYNqQnWhUPzwfGS"  --s5
+-- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY" --s6
 
 PIN8 = {pin=pio.P0_1}
 local function pin29cb(v)
-	print("pin29cb",v)
+    print("pin29cb",v)
+    print(misc.getimei())
 end
 --第29个引脚：GPIO_6；配置为中断；valid=1
 PIN29 = {pin=pio.P0_6,dir=pio.INT,valid=1,intcb=pin29cb}
@@ -45,10 +46,18 @@ local function pin8off()
 end
 local function rcvmessagecb(topic,payload,qos)
     print("rcvmessagecb:",topic,payload,qos)
+    local tjsondata,result,errinfo = json.decode(payload)
+    local voice
+    if result then
+        voice = tjsondata["voice"] 
+    else
+        print("json.decode error:",errinfo)
+        return
+    end
     --aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","device receive:"..payload,qos)
-    audio.play(0,"FILE","/ldata/" .. payload .. ".mp3",audiocore.VOL7)
+    audio.play(0,"FILE","/ldata/" .. voice .. ".mp3",audiocore.VOL7)
 
-    if payload == "aws02" then
+    if voice == "aws02" then
         pins.set(true,PIN8)
         sys.timer_start(pin8off,5000)
     end
