@@ -17,10 +17,18 @@ newsn = 'AjJnJOPk4m23FLn8VW4gxvYRnbhmawlE' --air800
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY" --s6
 
-PIN8 = {pin = pio.P0_1}
+PIN8 = {pin = pio.P0_1} --继电器
+PIN7 = {pin = pio.P0_0} --连接指示灯
+PIN9 = {pin = pio.P0_9} --签名请求指示灯
+pins.set(false, PIN7)
 local function pin29cb(v)
     print('pin29cb', v)
     print(misc.getimei())
+
+    if v then
+        aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","{\"target\":\"liweitest\",\"command\":\"ok\"}",1)
+        pins.set(false, PIN9)
+    end
 end
 --第29个引脚：GPIO_6；配置为中断；valid=1
 PIN29 = {pin = pio.P0_6, dir = pio.INT, valid = 1, intcb = pin29cb}
@@ -38,6 +46,7 @@ end
 
 local function subackcb(usertag, result)
     print('subackcb:', usertag, result)
+    pins.set(true, PIN7)
     audio.play(0, 'FILE', '/ldata/wel01.mp3', audiocore.VOL7)
 end
 
@@ -56,9 +65,13 @@ local function rcvmessagecb(topic, payload, qos)
     end
     --aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","device receive:"..payload,qos)
 
-    if voice == 'tts' then
+    if voice == "request" then
+        pins.set(true, PIN9)
+    elseif voice == "cancel" then
+        pins.set(false, PIN9)
+    elseif voice == 'tts' then
         tts = tjsondata['tts']
-        audio.play(0, 'TTS', common.binstohexs(common.gb2312toucs2(tts)), audiocore.VOL1)
+        audio.play(0, 'TTS', common.binstohexs(common.utf8toucs2(tts)), audiocore.VOL5)
     else
         audio.play(0, 'FILE', '/ldata/' .. voice .. '.mp3', audiocore.VOL7)
     end
@@ -86,6 +99,7 @@ end
 
 local function connecterrcb(r)
     print('connecterrcb:', r)
+    pins.set(false, PIN7)
 end
 audio.play(0, 'FILE', '/ldata/wel02.mp3', audiocore.VOL7)
 --5秒后开始烧写sn
