@@ -12,14 +12,14 @@ require 'audio'
 require 'pins'
 
 PRODUCT_KEY = 'IgW98z2NGr4'
-newsn = 'AjJnJOPk4m23FLn8VW4gxvYRnbhmawlE' --air800
+-- newsn = 'AjJnJOPk4m23FLn8VW4gxvYRnbhmawlE' --air800
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY"  --watch
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
--- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY" --s6
+newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
 
-PIN8 = {pin = pio.P0_1} --继电器
-PIN7 = {pin = pio.P0_0} --连接指示灯
-PIN9 = {pin = pio.P0_9} --签名请求指示灯
+PIN7 = {pin = pio.P0_2} --连接指示灯
+PIN8 = {pin = pio.P0_3} --继电器
+PIN9 = {pin = pio.P0_4} --签名请求指示灯
 pins.set(false, PIN7)
 local function pin29cb(v)
     print('pin29cb', v)
@@ -71,7 +71,7 @@ local function rcvmessagecb(topic, payload, qos)
         pins.set(false, PIN9)
     elseif voice == 'tts' then
         tts = tjsondata['tts']
-        audio.play(0, 'TTS', common.binstohexs(common.utf8toucs2(tts)), audiocore.VOL5)
+        audio.play(0, 'TTS', common.binstohexs(common.utf8toucs2(tts)), audiocore.VOL7)
     else
         audio.play(0, 'FILE', '/ldata/' .. voice .. '.mp3', audiocore.VOL7)
     end

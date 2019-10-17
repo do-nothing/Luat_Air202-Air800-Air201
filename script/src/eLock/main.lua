@@ -15,6 +15,10 @@ require"sys"
 ]]
 --sys.opntrace(true,1)
 
+--加载硬件看门狗功能模块（for s6）
+require "wdt"
+wdt.setup(pio.P0_30, pio.P0_31)
+
 require "test"
 
 sys.init(0,0)
