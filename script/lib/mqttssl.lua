@@ -527,6 +527,11 @@ end
 		item：table类型，{data=,para=}，消息回传的参数和数据，目前只是在SEND类型的事件中用到了此参数，例如调用socketssl.send时传入的第2个和第3个参数分别为dat和par，则item={data=dat,para=par}
 返回值：无
 ]]
+
+local closedhandler;
+function setclosedhandler(ch)
+	closedhandler = ch;
+end
 function ntfy(idx,evt,result,item)
 	local mqttclientidx = getclient(idx)
 	print("ntfy",evt,result,item)
@@ -574,6 +579,9 @@ function ntfy(idx,evt,result,item)
 		end
 	--连接被动断开
 	elseif evt == "STATE" and result == "CLOSED" then
+		if closedhandler then
+			closedhandler();
+		end
 		sys.timer_stop(datinactive,idx)
 		sys.timer_stop(pingreq,idx)
 		mqttdup.rmvall(idx)

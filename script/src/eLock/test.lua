@@ -11,22 +11,27 @@ require 'misc'
 require 'audio'
 require 'pins'
 
-PRODUCT_KEY = 'IgW98z2NGr4'
+-- PRODUCT_KEY = 'IgW98z2NGr4'
+PRODUCT_KEY = 'a1wHIx75Rf2' -- elock
 -- newsn = 'AjJnJOPk4m23FLn8VW4gxvYRnbhmawlE' --air800
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY"  --watch
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
-newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
+-- newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
+newsn = "J3neAsRFjDtLaOOjkHMwJfUic3T1WIhJ" --20191021_1
 
 PIN7 = {pin = pio.P0_2} --连接指示灯
 PIN8 = {pin = pio.P0_3} --继电器
 PIN9 = {pin = pio.P0_4} --签名请求指示灯
+PIN10 = {pin = pio.P0_5} --开机指示灯
 pins.set(false, PIN7)
+pins.set(true, PIN10)
 local function pin29cb(v)
     print('pin29cb', v)
     print(misc.getimei())
 
     if v then
         aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","{\"target\":\"liweitest\",\"command\":\"ok\"}",1)
+        print("isConnect:", aliyuniotssl.mqttssl.isConnect);
         pins.set(false, PIN9)
     end
 end
@@ -35,7 +40,7 @@ PIN29 = {pin = pio.P0_6, dir = pio.INT, valid = 1, intcb = pin29cb}
 pins.reg(PIN29)
 
 local function print(...)
-    _G.print('guide info -->', ...)
+    _G.print('eloak info -->', ...)
 end
 
 local function setsn()
@@ -83,7 +88,7 @@ local function rcvmessagecb(topic, payload, qos)
 end
 
 local function connectedcb()
-    print('connectedcb')
+    print('设备连接成功！')
     --订阅主题
     aliyuniotssl.subscribe(
         {
@@ -101,6 +106,14 @@ local function connecterrcb(r)
     print('connecterrcb:', r)
     pins.set(false, PIN7)
 end
+local function closedhandler()
+    print("设备已断开！")
+    pins.set(false, PIN7)
+end
+
+aliyuniotssl.mqttssl.setclosedhandler(closedhandler);
+
+
 audio.play(0, 'FILE', '/ldata/wel02.mp3', audiocore.VOL7)
 --5秒后开始烧写sn
 sys.timer_start(setsn, 5000)
