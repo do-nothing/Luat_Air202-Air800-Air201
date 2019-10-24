@@ -19,24 +19,26 @@ PRODUCT_KEY = 'a1wHIx75Rf2' -- elock
 -- newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
 newsn = "J3neAsRFjDtLaOOjkHMwJfUic3T1WIhJ" --20191021_1
 
-PIN7 = {pin = pio.P0_2} --连接指示灯
-PIN8 = {pin = pio.P0_3} --继电器
-PIN9 = {pin = pio.P0_4} --签名请求指示灯
-PIN10 = {pin = pio.P0_5} --开机指示灯
+PIN7 = {pin = pio.P0_6} --连接指示灯
+PIN8 = {pin = pio.P0_4} --继电器
+PIN9 = {pin = pio.P0_5} --签名请求指示灯
+PIN10 = {pin = pio.P0_7} --开机指示灯
+PIN11 = {pin = pio.P0_3} --高电位
 pins.set(false, PIN7)
 pins.set(true, PIN10)
+pins.set(true, PIN11)
 local function pin29cb(v)
     print('pin29cb', v)
     print(misc.getimei())
 
     if v then
-        aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","{\"target\":\"liweitest\",\"command\":\"ok\"}",1)
+        aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/user/update","{\"target\":\"demo1\",\"command\":\"ok\"}",1)
         print("isConnect:", aliyuniotssl.mqttssl.isConnect);
         pins.set(false, PIN9)
     end
 end
 --第29个引脚：GPIO_6；配置为中断；valid=1
-PIN29 = {pin = pio.P0_6, dir = pio.INT, valid = 1, intcb = pin29cb}
+PIN29 = {pin = pio.P0_2, dir = pio.INT, valid = 1, intcb = pin29cb}
 pins.reg(PIN29)
 
 local function print(...)
@@ -68,7 +70,6 @@ local function rcvmessagecb(topic, payload, qos)
         print('json.decode error:', errinfo)
         return
     end
-    --aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/update","device receive:"..payload,qos)
 
     if voice == "request" then
         pins.set(true, PIN9)
@@ -92,8 +93,8 @@ local function connectedcb()
     --订阅主题
     aliyuniotssl.subscribe(
         {
-            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/get', qos = 0},
-            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/get', qos = 1}
+            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/user/get', qos = 0},
+            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/user/get', qos = 1}
         },
         subackcb,
         'subscribegetopic'
