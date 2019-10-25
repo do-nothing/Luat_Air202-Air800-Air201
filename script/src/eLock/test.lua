@@ -18,6 +18,7 @@ PRODUCT_KEY = 'a1wHIx75Rf2' -- elock
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
 -- newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
 newsn = "J3neAsRFjDtLaOOjkHMwJfUic3T1WIhJ" --20191021_1
+EOS_ACCOUNT = "liweitest"
 
 PIN7 = {pin = pio.P0_6} --连接指示灯
 PIN8 = {pin = pio.P0_4} --继电器
@@ -32,7 +33,7 @@ local function pin29cb(v)
     print(misc.getimei())
 
     if v then
-        aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/user/update","{\"target\":\"demo1\",\"command\":\"ok\"}",1)
+        aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/user/update","{\"target\":\""..EOS_ACCOUNT.."\",\"command\":\"ok\"}",1)
         print("isConnect:", aliyuniotssl.mqttssl.isConnect);
         pins.set(false, PIN9)
     end
