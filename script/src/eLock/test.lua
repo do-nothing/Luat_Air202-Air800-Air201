@@ -17,8 +17,8 @@ PRODUCT_KEY = 'a1wHIx75Rf2' -- elock
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY"  --watch
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
 -- newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
-newsn = "J3neAsRFjDtLaOOjkHMwJfUic3T1WIhJ" --20191021_1
-EOS_ACCOUNT = "liweitest"
+newsn = "tU7BXwM4AZGXZMiMSwnqpCCbhQhXfxIR" --20191021_1
+EOS_ACCOUNT = "unknow"
 
 PIN7 = {pin = pio.P0_6} --连接指示灯
 PIN8 = {pin = pio.P0_4} --继电器
@@ -34,8 +34,9 @@ local function pin29cb(v)
 
     if v then
         aliyuniotssl.publish("/"..PRODUCT_KEY.."/"..misc.getimei().."/user/update","{\"target\":\""..EOS_ACCOUNT.."\",\"command\":\"ok\"}",1)
-        print("isConnect:", aliyuniotssl.mqttssl.isConnect);
         pins.set(false, PIN9)
+        print("isConnect:", aliyuniotssl.mqttssl.isConnect)
+        print("EOS_ACCOUNT",EOS_ACCOUNT)
     end
 end
 --第29个引脚：GPIO_6；配置为中断；valid=1
@@ -55,6 +56,7 @@ end
 local function subackcb(usertag, result)
     print('subackcb:', usertag, result)
     pins.set(true, PIN7)
+    aliyuniotssl.publish("/shadow/update/"..PRODUCT_KEY.."/"..misc.getimei(),"{\"method\":\"get\"}",1);
     audio.play(0, 'FILE', '/ldata/wel01.mp3', audiocore.VOL7)
 end
 
@@ -63,10 +65,18 @@ local function pin8off()
 end
 local function rcvmessagecb(topic, payload, qos)
     print('rcvmessagecb:', topic, payload, qos)
+
     local tjsondata, result, errinfo = json.decode(payload)
     local voice
     if result then
+        if tjsondata['payload'] then
+            EOS_ACCOUNT = tjsondata['payload']['state']['desired']['target']
+        end
         voice = tjsondata['voice']
+        if voice == nil then
+            return
+        end
+        print("voice-->",voice);
     else
         print('json.decode error:', errinfo)
         return
@@ -95,7 +105,8 @@ local function connectedcb()
     aliyuniotssl.subscribe(
         {
             {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/user/get', qos = 0},
-            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/user/get', qos = 1}
+            {topic = '/' .. PRODUCT_KEY .. '/' .. misc.getimei() .. '/user/get', qos = 1},
+            {topic = '/shadow/get/' .. PRODUCT_KEY .. '/' .. misc.getimei(), qos = 1}
         },
         subackcb,
         'subscribegetopic'
