@@ -28,7 +28,7 @@ local socketConnected
 --GSM：已注册GSM网络
 --GPRS：已附着GPRS数据网络
 --SCK：socket已连接上后台
-local ledState = "NULL"
+ledState = "NULL"
 local ON,OFF = 1,2
 --各种工作状态下配置的点亮、熄灭时长（单位毫秒）
 local ledBlinkTime =

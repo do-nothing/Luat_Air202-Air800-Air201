@@ -17,7 +17,7 @@ PRODUCT_KEY = 'a1wHIx75Rf2' -- elock
 -- newsn = "rWGfH1dLIkopM8j3CvzTma21N08HE1eY"  --watch
 -- newsn = "fCWgxisAf0AgtGIPkIjqKyxbOldZpzjs"  --s5
 -- newsn = "6MtvObCDInG78mzGinQq2WmrzIzvvjbK" --s6
-newsn = "tU7BXwM4AZGXZMiMSwnqpCCbhQhXfxIR" --20191021_1
+newsn = "nWLL0AmrJv7j613HvH2XFpiRR9EO8eeS" --20191021_1
 EOS_ACCOUNT = "unknow"
 
 PIN7 = {pin = pio.P0_6} --连接指示灯
