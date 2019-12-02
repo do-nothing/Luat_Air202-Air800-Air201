@@ -99,8 +99,8 @@ local function connectCbFnc(result)
         --订阅主题，不需要考虑订阅结果，如果订阅失败，aLiYun库中会自动重连
         aLiYun.subscribe(
             {
-                ['/' .. PRODUCT_KEY .. '/' .. getDeviceName() .. '/get'] = 0,
-                ['/' .. PRODUCT_KEY .. '/' .. getDeviceName() .. '/get'] = 1,
+                ['/' .. PRODUCT_KEY .. '/' .. getDeviceName() .. '/user/get'] = 0,
+                ['/' .. PRODUCT_KEY .. '/' .. getDeviceName() .. '/user/get'] = 1,
                 ['/shadow/get/' .. PRODUCT_KEY .. '/' .. getDeviceName()] = 1
             }
         )
