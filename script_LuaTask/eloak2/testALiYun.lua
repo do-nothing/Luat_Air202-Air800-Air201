@@ -14,6 +14,8 @@ local function print(...)
     _G.print('eloak2 info -->', ...)
 end
 
+audio.setStrategy(1);
+
 local setGpio7Fnc = pins.setup(pio.P0_7, 0)
 local setGpio6Fnc = pins.setup(pio.P0_6, 0)
 local setGpio5Fnc = pins.setup(pio.P0_5, 0)
@@ -80,7 +82,8 @@ local function rcvCbFnc(topic, qos, payload)
         tts = tjsondata['tts']
         audio.play(0, 'TTS', tts, volume)
     else
-        audio.play(0, 'FILE', '/ldata/' .. voice .. '.mp3', volume)
+        -- audio.play(0, 'FILE', '/ldata/' .. voice .. '.mp3', volume)
+        audio.play(0, 'TTS', "已开锁", volume)
     end
     
     if voice == 'aws02' then
